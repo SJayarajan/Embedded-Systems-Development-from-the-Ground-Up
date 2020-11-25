@@ -1,2 +1,2 @@
-# Embedded-Systems-Devrlopment-from-the-Ground-Up
+# Embedded-Systems-Development-from-the-Ground-Up
 All support documents for the Book
