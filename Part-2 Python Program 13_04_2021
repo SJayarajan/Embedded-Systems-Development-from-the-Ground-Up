@@ -1,0 +1,478 @@
+##**************************************************************************
+#ARDUINO TO EXCEL PYTHON INTERFACE DESIGNED AND PROGRAMMED BY :
+#SANTHOSH JAYARAJAN .
+#PROGRMING START ON 27/2/2020.
+#NO EARLIER REVISIONS.
+
+#NOTES:
+#TESTED ON 10-3-2021
+#
+#
+#**************************************************************************#
+import xlwt
+import matplotlib.pyplot as plt
+import datetime
+from tkinter import *
+from tkinter import messagebox
+from pyfirmata import Arduino,util
+
+#DATA VARIABLE INTTILISILATION
+inc=0
+X1data=[]
+Y1data=[]
+X2data=[]
+Y2data=[]
+X3data=[]
+Y3data=[]
+X4data=[]
+Y4data=[]
+X5data=[]
+Y5data=[]
+X6data=[]
+Y6data=[]
+
+# OPENING MATPLOT LIBRARY
+plt.ion()
+plt.show()
+
+# OPENING EXCEL WORKSHEET
+Current_Time = datetime.datetime.now()
+Hr = Current_Time.hour
+Min = Current_Time.minute
+Sec = Current_Time.second
+File_Name_Excel = "Arduino_Excel_Interface " + str(Hr) + "_" + str(Min) + "_" + str(Sec)+".xls"
+Excel_Workbook = xlwt.Workbook()
+Excel_WorkSheet = Excel_Workbook.add_sheet('Data at '+str(Hr)+'_'+str(Min)+'_'+str(Sec))
+
+#SEETING FONT0
+Font0=xlwt.Font()
+Font0.name="Calibri"
+Font0.bold=True
+Font0.height=600
+
+#SETTING FONT1
+Font1=xlwt.Font()
+Font1.name="Calibri"
+Font1.bold=True
+Font1.height=250
+
+#SETTING FONT2
+Font2=xlwt.Font()
+Font2.name="Calibri"
+Font2.height=220
+
+
+#vSETTING STYLES
+Style0=xlwt.XFStyle()
+pattern = xlwt.Pattern()
+pattern.pattern = xlwt.Pattern.SOLID_PATTERN
+pattern.pattern_fore_colour = xlwt.Style.colour_map['light_green']
+Style0.pattern = pattern
+Style0.font=Font0
+
+Style1=xlwt.XFStyle()
+Style1.font=Font1
+Style2=xlwt.XFStyle()
+Style2.font=Font2
+
+Excel_WorkSheet.write_merge(0,0,0,6,"Arduino Excel Interface Data",Style0)
+
+Excel_WorkSheet.write(2,0,"Channel Name>>",Style1)
+Excel_WorkSheet.write(3,0,"Sl.No",Style1)
+Excel_WorkSheet.write(3,1,"Date",Style1)
+Excel_WorkSheet.write(3,2,"Time",Style1)
+Excel_WorkSheet.write(3,3,"Channel-1",Style1)
+Excel_WorkSheet.write(3,4,"Channel-2",Style1)
+Excel_WorkSheet.write(3,5,"Channel-3",Style1)
+Excel_WorkSheet.write(3,6,"Channel-4",Style1)
+Excel_WorkSheet.write(3,7,"Channel-5",Style1)
+Excel_WorkSheet.write(3,8,"Channel-6",Style1)
+
+
+# CREATING A TKINTER WINDOW
+master = Tk()
+reading=0
+master.title('Arduino Based Excel Interface Ver 1.0')
+
+#ABOUT PROGRAM
+def About_prog(event):
+  messagebox.showinfo("About the Arduino Excel Interface","This Program was developed by Santhosh Jayarajan in March 2020 Version 1.0")
+
+#QUIT THE PROGRAM
+def Quit_prog(event):
+  master.destroy()
+  plt.close()
+  Excel_Workbook.save(File_Name_Excel)
+#START READING
+def Start_Read(event):
+  global reading,ch1_scale_val1,ch1_scale_val2,ch1_scale_val3
+  global ch2_scale_val1, ch2_scale_val2, ch2_scale_val3
+  global ch3_scale_val1, ch3_scale_val2, ch3_scale_val3
+  global ch4_scale_val1, ch4_scale_val2, ch4_scale_val3
+  global ch5_scale_val1, ch5_scale_val2, ch5_scale_val3
+  global ch6_scale_val1, ch6_scale_val2, ch6_scale_val3
+
+  if reading==0:
+    reading=1
+    start_read_but.config(text='Stop Reading')
+    stat_ind.config(text="Started Reading from Arduino...",background='seagreen1',foreground='blue4')
+    if (a1_sp_off.get() == "" or a2_sp_off.get() == "" or a3_sp_off.get() == "" or a4_sp_off.get() == "" or a5_sp_off.get() == "" or a6_sp_off.get() == ""):
+        reading=0
+        start_read_but.config(text='Start Reading')
+        stat_ind.config(text="Enter all Channel Details--Data Entry Error...", background='red', foreground='yellow')
+        messagebox.showinfo("Channel Data Entry Incomplete","Enter values for all channels as Span,Offset and Channel Name as Comma Seperated Values...")
+        return
+  else:
+    reading=0
+    start_read_but.config(text='Start Reading')
+    stat_ind.config(text="Stopped Reading from Arduino...", background='red', foreground='yellow')
+    plt.close()
+
+#EXTRACTION OF CHANNEL ENTRY VALUES SPAN,OFFSET AND CHANNEL NAME
+  ch1_scale = a1_sp_off.get().split(",")
+  ch2_scale = a2_sp_off.get().split(",")
+  ch3_scale = a3_sp_off.get().split(",")
+  ch4_scale = a4_sp_off.get().split(",")
+  ch5_scale = a5_sp_off.get().split(",")
+  ch6_scale = a6_sp_off.get().split(",")
+
+  # CHANNEL -1 DETAILS
+  ch1_scale_val1 = float(ch1_scale[0])
+  ch1_scale_val2 = float(ch1_scale[1])
+  ch1_scale_val3 = ch1_scale[2]
+  # CHANNEL -2 DETAILS
+  ch2_scale_val1 = float(ch2_scale[0])
+  ch2_scale_val2 = float(ch2_scale[1])
+  ch2_scale_val3 = ch2_scale[2]
+  # CHANNEL -3 DETAILS
+  ch3_scale_val1 = float(ch3_scale[0])
+  ch3_scale_val2 = float(ch3_scale[1])
+  ch3_scale_val3 = ch3_scale[2]
+  # CHANNEL -4 DETAILS
+  ch4_scale_val1 = float(ch4_scale[0])
+  ch4_scale_val2 = float(ch4_scale[1])
+  ch4_scale_val3 = ch4_scale[2]
+  # CHANNEL -5 DETAILS
+  ch5_scale_val1 = float(ch5_scale[0])
+  ch5_scale_val2 = float(ch5_scale[1])
+  ch5_scale_val3 = ch5_scale[2]
+  # CHANNEL -6 DETAILS
+  ch6_scale_val1 = float(ch6_scale[0])
+  ch6_scale_val2 = float(ch6_scale[1])
+  ch6_scale_val3 = ch6_scale[2]
+
+
+   # MATPLOT LIB VALUES
+
+  Read_Analog()
+
+#READ ANALOG VALUES FUNCTION
+def Read_Analog():
+   global ch1_scale_val1, ch1_scale_val2,ch1_scale_val3
+   global ch2_scale_val1, ch2_scale_val2, ch2_scale_val3
+   global ch3_scale_val1, ch3_scale_val2, ch3_scale_val3
+   global ch4_scale_val1, ch4_scale_val2, ch4_scale_val3
+   global ch5_scale_val1, ch5_scale_val2, ch5_scale_val3
+   global ch6_scale_val1, ch6_scale_val2, ch6_scale_val3,reading
+
+
+   global X1data
+   global Y1data
+   global X2data
+   global Y2data
+   global X3data
+   global Y3data
+   global X4data
+   global Y4data
+   global X5data
+   global Y5data
+   global X6data
+   global Y6data
+   global inc
+
+   if reading==1:
+
+       #READING THE ANALOG CHANNELS
+      a1_raw.config(text=str(ach1.read()))
+      a2_raw.config(text=str(ach2.read()))
+      a3_raw.config(text=str(ach3.read()))
+      a4_raw.config(text=str(ach4.read()))
+      a5_raw.config(text=str(ach5.read()))
+      a6_raw.config(text=str(ach6.read()))
+
+
+       # DISPLAYING THE SCALED ANALOG CHANNELS
+      a1_sc_dis.config(text=str(round(float(ach1.read()) * ch1_scale_val1 + ch1_scale_val2,4)))
+      a2_sc_dis.config(text=str(round(float(ach2.read()) * ch2_scale_val1 + ch2_scale_val2,4)))
+      a3_sc_dis.config(text=str(round(float(ach3.read()) * ch3_scale_val1 + ch3_scale_val2,4)))
+      a4_sc_dis.config(text=str(round(float(ach4.read()) * ch4_scale_val1 + ch4_scale_val2,4)))
+      a5_sc_dis.config(text=str(round(float(ach5.read()) * ch5_scale_val1 + ch5_scale_val2,4)))
+      a6_sc_dis.config(text=str(round(float(ach6.read()) * ch6_scale_val1 + ch6_scale_val2,4)))
+
+      #DISPLAYING THE CHANNEL NAME
+      a1_scaled.config(text=ch1_scale_val3)
+      a2_scaled.config(text=ch2_scale_val3)
+      a3_scaled.config(text=ch3_scale_val3)
+      a4_scaled.config(text=ch4_scale_val3)
+      a5_scaled.config(text=ch5_scale_val3)
+      a6_scaled.config(text=ch6_scale_val3)
+      excel_file.config(text="Storing Excel Record No: "+str(inc) + " in File>>")
+
+       #MATPLOTLIB VALUES
+      Current_Time=datetime.datetime.now()
+      Hr=Current_Time.hour
+      Min=Current_Time.minute
+      Sec=Current_Time.second
+
+      Day=Current_Time.day
+      Mon=Current_Time.month
+      Yer=Current_Time.year
+      Date_Now=str(Day) +"/"+str(Mon)+"/"+str(Yer)
+      Time_Now=str(Hr) + ":" + str(Min) + ":" + str(Sec)
+      inc=inc+1
+      Y1data.append(round(float(ach1.read()) * ch1_scale_val1 + ch1_scale_val2,4))
+      Y2data.append(round(float(ach2.read()) * ch2_scale_val1 + ch2_scale_val2, 4))
+      Y3data.append(round(float(ach3.read()) * ch3_scale_val1 + ch3_scale_val2, 4))
+      Y4data.append(round(float(ach4.read()) * ch4_scale_val1 + ch4_scale_val2, 4))
+      Y5data.append(round(float(ach5.read()) * ch5_scale_val1 + ch5_scale_val2, 4))
+      Y6data.append(round(float(ach6.read()) * ch6_scale_val1 + ch6_scale_val2, 4))
+      X1data.append(inc)
+
+
+      plt.plot(X1data,Y1data,marker='o',linestyle='solid',linewidth=2,color='red')
+      plt.plot(X1data, Y2data, marker='o', linestyle='solid', linewidth=2, color='green')
+      plt.plot(X1data, Y3data, marker='o', linestyle='solid', linewidth=2, color='blue')
+      plt.plot(X1data, Y4data, marker='o', linestyle='solid', linewidth=2, color='black')
+      plt.plot(X1data, Y5data, marker='o', linestyle='solid', linewidth=2, color='cyan')
+      plt.plot(X1data, Y6data, marker='o', linestyle='solid', linewidth=2, color='yellow')
+      plt.legend([ch1_scale_val3,ch2_scale_val3,ch3_scale_val3,ch4_scale_val3,ch5_scale_val3,ch6_scale_val3 ], loc="lower right")
+      plt.grid(True)
+      plt.title('Arduino Analog Data at :'+ Time_Now)
+
+
+      plt.xlabel('Record No:', fontsize=14)
+      plt.ylabel('Analog Values', fontsize=14)
+      plt.draw()
+      plt.pause(0.05)
+
+      # EXCEL VALUES LOADING
+      Excel_WorkSheet.write(inc + 3, 0, inc, Style2)
+      Excel_WorkSheet.write(inc + 3, 1, Date_Now, Style2)
+      Excel_WorkSheet.write(inc + 3, 2, Time_Now, Style2)
+      Excel_WorkSheet.write(inc+3, 3, round(float(ach1.read()) * ch1_scale_val1 + ch1_scale_val2,4), Style2)
+      Excel_WorkSheet.write(inc+3, 4, round(float(ach2.read()) * ch2_scale_val1 + ch2_scale_val2,4), Style2)
+      Excel_WorkSheet.write(inc+3, 5, round(float(ach3.read()) * ch3_scale_val1 + ch3_scale_val2,4), Style2)
+      Excel_WorkSheet.write(inc+3, 6, round(float(ach4.read()) * ch4_scale_val1 + ch4_scale_val2,4), Style2)
+      Excel_WorkSheet.write(inc+3, 7, round(float(ach5.read()) * ch5_scale_val1 + ch5_scale_val2,4), Style2)
+      Excel_WorkSheet.write(inc+3, 8, round(float(ach6.read()) * ch6_scale_val1 + ch6_scale_val2,4), Style2)
+
+      #ONE TIME DATA SENT TO EXCEL
+      if inc==1:
+        Excel_WorkSheet.write(2, 3, ch1_scale_val3, Style1)
+        Excel_WorkSheet.write(2, 4, ch2_scale_val3, Style1)
+        Excel_WorkSheet.write(2, 5, ch3_scale_val3, Style1)
+        Excel_WorkSheet.write(2, 6, ch4_scale_val3, Style1)
+        Excel_WorkSheet.write(2, 7, ch5_scale_val3, Style1)
+        Excel_WorkSheet.write(2, 8, ch6_scale_val3, Style1)
+        File_Name_Excel_Dis = "Arduino_Excel_Interface " + str(Hr) + "_" + str(Min) + "_" + str(Sec) + ".xls"
+        excel_file_loc.config(text=File_Name_Excel_Dis)
+
+      master.after(2000,Read_Analog)
+
+
+# START UP ROUTINE FOR DISPLAY OF LABELS
+# ANALOG CHANNEL DISPLAY LABELS
+title_1=Label(master,text="Raw Analog Data",font=("Herlvetica",14))
+title_1.grid(row=1,column=0)
+
+a1_label = Label(master, text = "Analog Channel-0 (0-1.000)",relief=RIDGE,font=("Helvetica", 10),width=50,background='khaki1')
+a1_label.grid(row = 2, column = 0,padx=15)
+a2_label = Label(master, text = "Analog Channel-1 (0-1.000)",relief=RIDGE,font=("Helvetica", 10),width=50,background='khaki1')
+a2_label.grid(row = 3, column = 0)
+
+a3_label = Label(master, text = "Analog Channel-2 (0-1.000)",relief=RIDGE,font=("Helvetica", 10),width=50,background='khaki1')
+a3_label.grid(row = 4, column = 0)
+
+a4_label = Label(master, text = "Analog Channel-3 (0-1.000)",relief=RIDGE,font=("Helvetica", 10),width=50,background='khaki1')
+a4_label.grid(row = 5, column = 0)
+
+a5_label = Label(master, text = "Analog Channel-4 (0-1.000)",relief=RIDGE,font=("Helvetica", 10),width=50,background='khaki1')
+a5_label.grid(row = 6, column = 0)
+
+a6_label = Label(master, text = "Analog Channel-5 (0-1.000)",relief=RIDGE,font=("Helvetica", 10),width=50,background='khaki1')
+a6_label.grid(row = 7, column = 0)
+
+# ANALOG CHANNEL RAW DATA DISPLAY IN 0-1.000 VALUES
+a1_raw = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="linen",width=10,justify=CENTER)
+a1_raw.grid(row = 2, column = 1)
+a1_raw.config(anchor=CENTER)
+
+a2_raw = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="linen",width=10,justify=CENTER)
+a2_raw.grid(row = 3, column = 1)
+a2_raw.config(anchor=CENTER)
+
+a3_raw = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="linen",width=10,justify=CENTER)
+a3_raw.grid(row = 4, column = 1)
+a3_raw.config(anchor=CENTER)
+
+a4_raw = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="linen",width=10,justify=CENTER)
+a4_raw.grid(row = 5, column = 1)
+a4_raw.config(anchor=CENTER)
+
+a5_raw = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="linen",width=10,justify=CENTER)
+a5_raw.grid(row = 6, column = 1)
+a5_raw.config(anchor=CENTER)
+
+a6_raw = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="linen",width=10,justify=CENTER)
+a6_raw.grid(row = 7, column = 1)
+a6_raw.config(anchor=CENTER)
+
+#ENTRY OF SPAN ,OFFSET AND CHANNEL NAME
+# ANALOG CHANNEL RAW DATA DISPLAY IN 0-1.000 VALUES
+sep_line_1=Label(master,text="------------------------------------------------------")
+sep_line_1.grid(row=8,column=0)
+title_2=Label(master,text="Span,Offset and Channel Name Data",font=("Herlvetica",14))
+title_2.grid(row=9,column=0)
+
+
+a1_sp_off_lbl = Label(master, text = "CH-1 Enter Span,Offset,Channel Name(,Seperated)",relief=RIDGE,font=("Helvetica", 10),background="lightblue",width=50,justify=CENTER)
+a1_sp_off_lbl.grid(row = 10, column = 0)
+
+a2_sp_off_lbl = Label(master, text = "CH-2 Enter Span,Offset,Channel Name(,Seperated)",relief=RIDGE,font=("Helvetica", 10),background="lightblue",width=50,justify=CENTER)
+a2_sp_off_lbl.grid(row = 11, column = 0)
+
+a3_sp_off_lbl = Label(master, text = "CH-3 Enter Span,Offset,Channel Name(,Seperated)",relief=RIDGE,font=("Helvetica", 10),background="lightblue",width=50,justify=CENTER)
+a3_sp_off_lbl.grid(row = 12, column = 0)
+
+a4_sp_off_lbl = Label(master, text = "CH-4 Enter Span,Offset,Channel Name(,Seperated)",relief=RIDGE,font=("Helvetica", 10),background="lightblue",width=50,justify=CENTER)
+a4_sp_off_lbl.grid(row = 13, column = 0)
+
+a5_sp_off_lbl = Label(master, text = "CH-5 Enter Span,Offset,Channel Name(,Seperated)",relief=RIDGE,font=("Helvetica", 10),background="lightblue",width=50,justify=CENTER)
+a5_sp_off_lbl.grid(row = 14, column = 0)
+
+a6_sp_off_lbl = Label(master, text = "CH-6 Enter Span,Offset,Channel Name(,Seperated)",relief=RIDGE,font=("Helvetica", 10),background="lightblue",width=50,justify=CENTER)
+a6_sp_off_lbl.grid(row = 15, column = 0)
+
+#ENTRY FOR SPA,OFFSET AND CHANNEL NAME
+a1_sp_off=Entry(master,font=("Helvetica",10),background="orange",width=30)
+a1_sp_off.grid(row=10,column=1)
+
+a2_sp_off=Entry(master,font=("Helvetica",10),background="orange",width=30)
+a2_sp_off.grid(row=11,column=1)
+
+a3_sp_off=Entry(master,font=("Helvetica",10),background="orange",width=30)
+a3_sp_off.grid(row=12,column=1)
+
+a4_sp_off=Entry(master,font=("Helvetica",10),background="orange",width=30)
+a4_sp_off.grid(row=13,column=1)
+
+a5_sp_off=Entry(master,font=("Helvetica",10),background="orange",width=30)
+a5_sp_off.grid(row=14,column=1)
+
+a6_sp_off=Entry(master,font=("Helvetica",10),background="orange",width=30)
+a6_sp_off.grid(row=15,column=1)
+
+sep_line_2=Label(master,text="------------------------------------------------------")
+sep_line_2.grid(row=16,column=0)
+title_2=Label(master,text="Scaled Data",font=("Herlvetica",14))
+title_2.grid(row=17,column=0)
+
+#SCALED DATA DISPLAY
+a1_scaled = Label(master, text = "Analog Channel-0 Scaled",relief=GROOVE,font=("Helvetica", 10),width=50,background='seagreen1')
+a1_scaled.grid(row = 18, column = 0)
+
+a2_scaled = Label(master, text = "Analog Channel-1 Scaled",relief=GROOVE,font=("Helvetica", 10),width=50,background='seagreen1')
+a2_scaled.grid(row = 19, column = 0)
+
+a3_scaled = Label(master, text = "Analog Channel-2 Scaled",relief=GROOVE,font=("Helvetica", 10),width=50,background='seagreen1')
+a3_scaled.grid(row = 20, column = 0)
+
+a4_scaled = Label(master, text = "Analog Channel-3 Scaled",relief=GROOVE,font=("Helvetica", 10),width=50,background='seagreen1')
+a4_scaled.grid(row = 21, column = 0)
+
+a5_scaled = Label(master, text = "Analog Channel-4 Scaled",relief=GROOVE,font=("Helvetica", 10),width=50,background='seagreen1')
+a5_scaled.grid(row = 22, column = 0)
+
+a6_scaled = Label(master, text = "Analog Channel-5 Scaled",relief=GROOVE,font=("Helvetica", 10),width=50,background='seagreen1')
+a6_scaled.grid(row = 23, column = 0)
+
+# ANALOG CHANNEL SCALED DATA
+a1_sc_dis = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="cyan",width=10,justify=CENTER)
+a1_sc_dis.grid(row = 18, column = 1)
+a1_sc_dis.config(anchor=CENTER)
+
+a2_sc_dis = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="cyan",width=10,justify=CENTER)
+a2_sc_dis.grid(row = 19, column = 1)
+a2_sc_dis.config(anchor=CENTER)
+
+a3_sc_dis = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="cyan",width=10,justify=CENTER)
+a3_sc_dis.grid(row = 20, column = 1)
+a3_sc_dis.config(anchor=CENTER)
+
+a4_sc_dis = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="cyan",width=10,justify=CENTER)
+a4_sc_dis.grid(row = 21, column = 1)
+a4_sc_dis.config(anchor=CENTER)
+
+a5_sc_dis = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="cyan",width=10,justify=CENTER)
+a5_sc_dis.grid(row = 22, column = 1)
+a5_sc_dis.config(anchor=CENTER)
+
+a6_sc_dis = Label(master, text = "-----",relief=GROOVE,font=("Helvetica", 10),background="cyan",width=10,justify=CENTER)
+a6_sc_dis.grid(row = 23, column = 1,pady=0)
+a6_sc_dis.config(anchor=CENTER)
+sep_line_3=Label(master,text="")
+sep_line_3.grid(row=24,column=0,pady=5)
+
+# STATUS INDICATOR
+stat_ind = Label(master, text = "Status: Waiting.....",relief=GROOVE,font=("Helvetica", 10),width=50,background='gold')
+stat_ind.grid(row= 26, column = 0,pady=5)
+
+excel_file = Label(master, text = "Excel File Store Location:",relief=GROOVE,font=("Helvetica", 10),width=50,background='lightcyan')
+excel_file.grid(row= 25, column = 0)
+excel_file_loc=Label(master, text = "--",relief=GROOVE,font=("Helvetica", 8),width=40,background='lightblue')
+excel_file_loc.grid(row=25,column=1)
+
+
+# BUTTON WIDGETS
+#START READ BUTTON
+start_read_but = Button(master, text = "  Start Reading  ")
+start_read_but.pack
+start_read_but.bind('<Button-1>',Start_Read)
+start_read_but.grid(row = 3, column = 2,padx=5)
+
+# QUIT BUTTON
+quit_but=Button(master,text="   Quit Program  ")
+quit_but.bind('<Button-1>',Quit_prog)
+quit_but.grid(row = 5, column = 2,padx=5)
+
+# ABOUT BUTTON
+about_but=Button(master,text="  About Program  ")
+about_but.bind('<Button-1>',About_prog)
+about_but.grid(row = 7, column = 2,padx=5)
+
+#ARDUINO SETUP
+try:
+    ardboard = Arduino('COM3', baudrate=9600)
+except:
+    messagebox.showinfo("COM Read Error", "Please check Cables and that you are connected to a Arduino with Firmata Loaded...")
+    exit()
+
+it = util.Iterator(ardboard)
+it.start()
+ardboard.analog[0].enable_reporting()
+ach1=ardboard.get_pin('a:0:i')
+ach2=ardboard.get_pin('a:1:i')
+ach3=ardboard.get_pin('a:2:i')
+ach4=ardboard.get_pin('a:3:i')
+ach5=ardboard.get_pin('a:4:i')
+ach6=ardboard.get_pin('a:5:i')
+
+mainloop()
+
+
+
+
+
+
+
+
